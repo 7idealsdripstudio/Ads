@@ -61,7 +61,7 @@ function vShop(r) {
   return `<div class="card"><b>Google Shopping : annonces gratuites</b><p class="sm">Tes produits apparaissent gratuitement dans l’onglet Shopping de Google. La plateforme fournit le catalogue à jour ; Google le relit chaque jour.</p>
     <label>Adresse du catalogue à donner à Google</label><input readonly value="${esc(r.feeds.google)}"><button class="btn" style="margin-top:6px" data-a="copy" data-id="${esc(r.feeds.google)}">Copier</button>
     <ol class="sm" style="margin:10px 0 0 18px"><li>Ouvre <b>merchants.google.com</b> avec ton compte Google et crée ton compte marchand (gratuit).</li><li>Produits → Sources de produits → <b>Ajouter des produits à partir d’un fichier</b> → saisir un lien, colle l’adresse ci-dessus, récupération <b>quotidienne</b>.</li><li>Vérifie que l’option <b>Fiches gratuites</b> est activée. Google valide en quelques jours.</li></ol></div>
-    <div class="card"><b>Produits 7ideals dans le catalogue</b><p class="mut sm">Le produit PELO y est déjà, automatiquement. Ajoute ici les pièces 7ideals qui ont une page où l’on peut les acheter.</p>
+    <div class="card"><b>Produits 7ideals dans le catalogue</b><p class="mut sm">Le produit PELO s’y ajoute automatiquement quand tu actives « PELO dans Google et Pinterest » (Réglages), une fois la boutique PELO prête. Ajoute ici les pièces 7ideals qui ont une page où l’on peut les acheter.</p>
     ${cat.map((x, i) => `<div class="row sm" style="margin-top:6px"><span>${esc(x.title)} · ${fr(x.price)} €</span><button class="btn" data-a="catdel" data-id="${i}">Retirer</button></div>`).join('')}
     <div class="g g2"><div><label>Nom de la pièce</label><input data-k="ct_t" maxlength="150" value="${esc(v('ct_t', ''))}"></div><div><label>Prix TTC (€)</label><input type="number" min="1" step="0.01" data-k="ct_p" value="${esc(v('ct_p', ''))}"></div>
     <div><label>Lien de la page produit</label><input data-k="ct_l" placeholder="https://" value="${esc(v('ct_l', ''))}"></div><div><label>Lien de la photo (ou une photo de la médiathèque)</label><input data-k="ct_i" placeholder="https://" value="${esc(v('ct_i', ''))}"></div></div>
@@ -75,7 +75,7 @@ function vPin(r) {
 function vSet(r) {
   const c = r.cfg, tog = (k, on, label) => `<button class="btn${on ? ' s' : ''}" data-a="tog" data-id="${k}">${on ? '✓ ' : ''}${label}</button>`;
   return `<div class="card"><b>Pilote automatique</b><p class="mut sm">Activé, il garde toujours une semaine de publications prête et publie à l’heure, sans toi.</p>
-    <div class="chips">${tog('auto', v('auto', c.auto), 'Pilote automatique')}${tog('ig', v('ig', c.nets.ig), 'Instagram')}${tog('fb', v('fb', c.nets.fb), 'Facebook')}${tog('bp', v('bp', c.brands.pelo), 'PELO')}${tog('b7', v('b7', c.brands['7ideals']), '7ideals')}</div>
+    <div class="chips">${tog('auto', v('auto', c.auto), 'Pilote automatique')}${tog('ig', v('ig', c.nets.ig), 'Instagram')}${tog('fb', v('fb', c.nets.fb), 'Facebook')}${tog('bp', v('bp', c.brands.pelo), 'PELO')}${tog('pf', v('pf', c.peloFeed), 'PELO dans Google et Pinterest')}${tog('b7', v('b7', c.brands['7ideals']), '7ideals')}</div>
     <div class="g g2"><div><label>Publications par semaine et par marque</label><input type="number" min="1" max="7" data-k="pw" value="${esc(v('pw', c.perWeek))}"></div>
     <div><label>Lien PELO</label><input data-k="up" value="${esc(v('up', c.urls.pelo))}"></div><div><label>Lien 7ideals</label><input data-k="u7" placeholder="https://" value="${esc(v('u7', c.urls['7ideals']))}"></div></div>
     <button class="btn s" style="margin-top:10px" data-a="cfg">Enregistrer</button><p class="sm mut" style="margin-top:8px">Rédaction des légendes : ${r.groq ? 'IA gratuite (Groq)' : 'modèles intégrés (ajoute GROQ_API_KEY pour l’IA gratuite)'}.</p></div>
@@ -132,7 +132,7 @@ const ACT = {
   async catdel(i) { try { await api('POST', '/api/catalog', { items: S.r.catalog.filter((_, n) => n !== +i) }); } catch (e) { toast(e.message); } load(); },
   tog(k) { const c = S.r.cfg, cur = { auto: c.auto, ig: c.nets.ig, fb: c.nets.fb, bp: c.brands.pelo, b7: c.brands['7ideals'] }[k]; F[k] = v(k, cur) ? 0 : 1; render(); },
   async cfg() { const c = S.r.cfg;
-    try { await api('POST', '/api/cfg', { auto: v('auto', c.auto), perWeek: +v('pw', c.perWeek), nets: { ig: v('ig', c.nets.ig), fb: v('fb', c.nets.fb) }, brands: { pelo: v('bp', c.brands.pelo), '7ideals': v('b7', c.brands['7ideals']) }, urls: { pelo: v('up', c.urls.pelo), '7ideals': v('u7', c.urls['7ideals']) } }); toast('Réglages enregistrés'); } catch (e) { toast(e.message); } load(); }
+    try { await api('POST', '/api/cfg', { peloFeed: v('pf', c.peloFeed), auto: v('auto', c.auto), perWeek: +v('pw', c.perWeek), nets: { ig: v('ig', c.nets.ig), fb: v('fb', c.nets.fb) }, brands: { pelo: v('bp', c.brands.pelo), '7ideals': v('b7', c.brands['7ideals']) }, urls: { pelo: v('up', c.urls.pelo), '7ideals': v('u7', c.urls['7ideals']) } }); toast('Réglages enregistrés'); } catch (e) { toast(e.message); } load(); }
 };
 document.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (b && ACT[b.dataset.a]) { e.preventDefault(); ACT[b.dataset.a](b.dataset.id, b); } });
 document.addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.k; if (k) F[k] = e.target.value; });

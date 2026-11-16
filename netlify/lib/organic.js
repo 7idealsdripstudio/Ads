@@ -33,11 +33,11 @@ async function pageToken() {   // la page Facebook se publie avec sa propre clé
 export async function log(msg) { const l = await getJ('log', []); l.unshift({ t: Date.now(), msg: String(msg).slice(0, 300) }); await setJ('log', l.slice(0, 200)); }
 
 /* ---- réglages ---- */
-const DEF = { auto: 0, perWeek: 3, nets: { ig: 1, fb: 1 }, brands: { pelo: 1, '7ideals': 1 }, urls: { pelo: 'https://boutique-pelo.netlify.app', '7ideals': '' } };
+const DEF = { auto: 1, peloFeed: 0, perWeek: 3, nets: { ig: 1, fb: 1 }, brands: { pelo: 1, '7ideals': 1 }, urls: { pelo: 'https://boutique-pelo.netlify.app', '7ideals': '' } };
 export async function cfg() { const c = await getJ('cfg2', {}); return { ...DEF, ...c, nets: { ...DEF.nets, ...(c.nets || {}) }, brands: { ...DEF.brands, ...(c.brands || {}) }, urls: { ...DEF.urls, ...(c.urls || {}) } }; }
 export async function setCfg(d) {
   const c = await cfg(), u = d.urls || {}, ok = s => /^https:\/\/[^\s]+$/.test(s || '');
-  const n = { auto: d.auto ? 1 : 0, perWeek: Math.max(1, Math.min(7, Math.round(+d.perWeek || c.perWeek))), nets: { ig: d.nets && d.nets.ig ? 1 : 0, fb: d.nets && d.nets.fb ? 1 : 0 }, brands: { pelo: d.brands && d.brands.pelo ? 1 : 0, '7ideals': d.brands && d.brands['7ideals'] ? 1 : 0 },
+  const n = { auto: d.auto ? 1 : 0, peloFeed: d.peloFeed ? 1 : 0, perWeek: Math.max(1, Math.min(7, Math.round(+d.perWeek || c.perWeek))), nets: { ig: d.nets && d.nets.ig ? 1 : 0, fb: d.nets && d.nets.fb ? 1 : 0 }, brands: { pelo: d.brands && d.brands.pelo ? 1 : 0, '7ideals': d.brands && d.brands['7ideals'] ? 1 : 0 },
     urls: { pelo: ok(u.pelo) ? String(u.pelo).slice(0, 300) : c.urls.pelo, '7ideals': ok(u['7ideals']) ? String(u['7ideals']).slice(0, 300) : c.urls['7ideals'] } };
   await setJ('cfg2', n); await log(`Réglages : ${n.perWeek} publication(s) par semaine et par marque, pilote ${n.auto ? 'activé' : 'désactivé'}.`); return n;
 }
@@ -186,11 +186,11 @@ async function peloItem() {
 }
 const X = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]));
 export async function googleFeed() {
-  const items = [...await peloItem(), ...await catalog()];
+  const c = await cfg(), items = [...(c.peloFeed ? await peloItem() : []), ...await catalog()];   // PELO n'est envoyé à Google qu'une fois la boutique prête (produit et commandes automatiques)
   return `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0"><channel><title>7ideals · PELO</title><link>${X(SITE())}</link><description>Produits PELO et 7ideals DRIPSTUDIO</description>\n` + items.map(i => `<item><g:id>${X(i.id)}</g:id><title>${X(i.title)}</title><description>${X(i.desc)}</description><link>${X(i.link)}</link><g:image_link>${X(i.img)}</g:image_link>${(i.more || []).map(u => `<g:additional_image_link>${X(u)}</g:additional_image_link>`).join('')}<g:availability>in_stock</g:availability><g:price>${i.price.toFixed(2)} EUR</g:price><g:brand>${X(i.brand)}</g:brand><g:condition>new</g:condition><g:identifier_exists>no</g:identifier_exists>${i.gpc ? `<g:google_product_category>${i.gpc}</g:google_product_category>` : ''}<g:shipping><g:country>FR</g:country><g:price>0.00 EUR</g:price></g:shipping></item>`).join('\n') + '\n</channel></rss>';
 }
 export async function pinterestFeed() {   // Pinterest lit ce flux et crée seul les épingles (Paramètres → Création groupée → publication automatique)
-  const c = await cfg(), items = [...(await peloItem()).slice(0, 1), ...await catalog()].map(i => ({ title: i.title, desc: i.desc, link: i.link, img: i.img, t: Date.now() - 86400000 }));
+  const c = await cfg(), items = [...(c.peloFeed ? (await peloItem()).slice(0, 1) : []), ...await catalog()].map(i => ({ title: i.title, desc: i.desc, link: i.link, img: i.img, t: Date.now() - 86400000 }));
   const done = (await posts()).filter(p => p.status === 'done').slice(-40).map(p => ({ title: p.caption.split('\n')[0].slice(0, 100), desc: p.caption.slice(0, 480), link: c.urls[p.brand] || c.urls.pelo, img: p.img, t: p.at || p.when }));
   return `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>7ideals · PELO</title><link>${X(SITE())}</link><description>Épingles PELO et 7ideals DRIPSTUDIO</description>\n` + [...done, ...items].filter(i => i.link && i.img).map((i, n) => `<item><title>${X(i.title)}</title><link>${X(i.link)}</link><description>${X(i.desc)}</description><guid isPermaLink="false">${X(crypto.createHash('sha1').update(i.img + i.title).digest('hex'))}</guid><pubDate>${new Date(i.t).toUTCString()}</pubDate><enclosure url="${X(i.img)}" type="image/jpeg" length="0"/></item>`).join('\n') + '\n</channel></rss>';
 }
