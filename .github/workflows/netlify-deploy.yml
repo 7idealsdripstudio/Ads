@@ -1,0 +1,14 @@
+name: Déployer sur Netlify
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lancer le déploiement Netlify
+        env:
+          HOOK: ${{ secrets.NETLIFY_BUILD_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then echo "Pas encore de build hook"; exit 0; fi
+          curl -fsS -X POST -d '{}' "$HOOK"

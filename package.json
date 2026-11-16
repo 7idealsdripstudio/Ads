@@ -1,0 +1,1 @@
+{ "name": "7ideals-ads", "private": true, "type": "module", "dependencies": { "@netlify/blobs": "^8.1.0" } }
