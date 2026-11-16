@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>7ideals TV — Expositions · États-Unis</title>
+<meta name="description" content="7ideals TV, la chaîne d’expositions de 7ideals DRIPSTUDIO : nos expositions et les chaînes du MoMA, du Met, du Guggenheim, du Whitney, du SFMOMA et de l’Art Institute de Chicago, en continu.">
+<meta property="og:type" content="website"><meta property="og:title" content="7ideals TV — en direct">
+<meta property="og:description" content="La chaîne d’expositions de 7ideals DRIPSTUDIO. Expositions · États-Unis, en continu.">
+<meta property="og:image" content="https://7ideals-tv.netlify.app/og.png"><meta property="og:url" content="https://7ideals-tv.netlify.app/"><meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="icon.png"><link rel="apple-touch-icon" href="icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&family=Silkscreen&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080808;--fg:#f4f4f4;--mut:#9a9da2;--line:#2c2e31;--card:#111214;--acc:#c9ccd1;--bad:#ff6b6b;--ok:#6bdc8b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Helvetica Neue',Helvetica,Inter,Arial,sans-serif;letter-spacing:-.02em}
+body{background:var(--bg);color:var(--fg);font-weight:500;font-size:14px;line-height:1.4}
+.px{font-family:'Silkscreen',ui-monospace,Menlo,monospace!important;font-weight:400!important;letter-spacing:0!important}
+.wrap{max-width:980px;margin:0 auto;padding:16px 14px 48px}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.brand{font-size:26px;font-weight:700;line-height:1}.brand sup{font-size:.45em}.sub{font-size:11px;color:var(--acc);margin-top:6px}
+.btn{background:transparent;color:var(--fg);border:1px solid var(--line);padding:8px 11px;font-size:12px;font-weight:700;cursor:pointer;border-radius:0;text-decoration:none;display:inline-block}
+.btn.s{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.card{border:1px solid var(--line);background:var(--card);padding:12px;margin-top:8px}
+.mut{color:var(--mut)}.sm{font-size:12px}.row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+h2{font-size:20px;font-weight:700}
+.tvgrid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px;align-items:start}@media(max-width:860px){.tvgrid{grid-template-columns:minmax(0,1fr)}}
+.tvscreen{position:relative;aspect-ratio:16/9;background:#000;border:1px solid var(--line);overflow:hidden}.tvscreen iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.tvempty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;color:#f4f4f4}.tvempty .px{font-size:22px}
+.tvnow{margin-top:10px;font-size:14px}.tvtag,.tvlive{font-size:10px;letter-spacing:0;color:var(--bad)}.tvtag{border:1px solid var(--bad);padding:1px 5px;margin-right:4px}
+.tvchs{display:grid;gap:4px;margin-top:8px}.tvch{display:flex;align-items:center;gap:10px;width:100%;background:transparent;border:1px solid transparent;color:var(--fg);padding:7px 8px;text-align:left;cursor:pointer}
+.tvch.on{border-color:var(--fg)}.tvch:hover{border-color:var(--line)}.tvn{font-size:13px;color:var(--mut);min-width:20px}.tvch.on .tvn{color:var(--bad)}.tvcn{display:flex;flex-direction:column;line-height:1.25}
+.tvit{display:flex;gap:10px;margin-top:10px;align-items:flex-start}.tvth{width:96px;flex:none;aspect-ratio:16/9;background:#000;display:flex;align-items:center;justify-content:center;font-size:10px;color:#f4f4f4;overflow:hidden}.tvth img{width:100%;height:100%;object-fit:cover}
+.tvit .btn{padding:4px 8px;font-size:12px}#tvside .card{margin:0 0 10px}summary{cursor:pointer}
+footer{margin-top:28px;padding-top:14px;border-top:1px solid var(--line)}footer a{color:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><div><div class="brand"><span class="px">(7</span> studio<sup>®</sup><span class="px">)</span></div><div class="sub px">[7IDEALS TV]</div></div>
+    <a class="btn" href="https://www.instagram.com/7ideals_dripstudio/" target="_blank" rel="noopener">Instagram</a></header>
+  <main id="tvwrap"><div class="row" style="align-items:baseline;justify-content:flex-start;gap:10px;margin-bottom:10px"><h2>7ideals TV</h2><span class="tvlive px">● EN DIRECT</span><span class="mut sm">Expositions · États-Unis</span></div>
+    <div class="tvgrid"><div><div class="tvscreen" id="tvscreen"></div><div class="tvnow" id="tvnow"></div><p class="mut sm" style="margin-top:6px">Touchez l’écran pour lancer le son.</p></div><aside id="tvside"></aside></div></main>
+  <footer class="mut sm">7ideals DRIPSTUDIO · Paris · New York · Cannes · <a href="mailto:contact@7idealsdripstudio.fr">contact@7idealsdripstudio.fr</a><br>Les chaînes de musées diffusent les vidéos publiques de leurs chaînes YouTube officielles.</footer>
+</div>
+<script src="tv.js"></script>
+</body>
+</html>
