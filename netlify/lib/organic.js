@@ -6,7 +6,7 @@ export const err = (code, msg) => Object.assign(new Error(msg || 'error'), { sta
 const VER = () => process.env.META_API_VERSION || 'v26.0', BASE = () => (process.env.META_GRAPH_BASE || 'https://graph.facebook.com').replace(/\/$/, '');
 const TOKEN = () => process.env.META_TOKEN || process.env.META_ADS_TOKEN || '';
 export const SITE = () => (process.env.URL || 'https://7ideals-ads.netlify.app').replace(/\/$/, '');
-export const missing = () => [['META_TOKEN', TOKEN()], ['META_PAGE_ID', process.env.META_PAGE_ID], ['META_IG_ID', process.env.META_IG_ID]].filter(([, v]) => !v).map(([k]) => k);
+export const missing = () => TOKEN() ? [] : ['META_TOKEN'];
 async function graph(path, params = {}, method = 'GET', token) {
   const tok = token || TOKEN(); if (!tok) throw err(400, 'Clé Meta manquante (META_TOKEN)');
   const flat = Object.fromEntries(Object.entries(params).filter(([, v]) => v != null).map(([k, v]) => [k, typeof v === 'object' ? JSON.stringify(v) : String(v)]));
@@ -17,9 +17,17 @@ async function graph(path, params = {}, method = 'GET', token) {
   if (!r.ok || j.error) { const e = j.error || {}; throw err(502, 'Meta : ' + String(e.error_user_msg || e.message || 'HTTP ' + r.status).slice(0, 300)); }
   return j;
 }
+async function ids() {   // retrouve seul la page Facebook et le compte Instagram reliés à la clé (META_PAGE_ID / META_IG_ID restent possibles)
+  const c = await getJ('ids'); if (c && c.page && Date.now() - c.at < 7 * 86400000) return c;
+  let page = process.env.META_PAGE_ID || '', ig = process.env.META_IG_ID || '', name = '';
+  if (!page) { const a = ((await graph('me/accounts', { fields: 'id,name,instagram_business_account', limit: 25 })).data || []); const pick = a.find(x => /7\s*ideals|drip/i.test(x.name)) || a.find(x => x.instagram_business_account) || a[0]; if (!pick) throw err(400, 'Aucune page Facebook n’est reliée à la clé Meta'); page = pick.id; name = pick.name; if (!ig && pick.instagram_business_account) ig = pick.instagram_business_account.id; }
+  if (!ig) { const j = await graph(page, { fields: 'name,instagram_business_account' }); name = name || j.name; ig = (j.instagram_business_account || {}).id || ''; }
+  const o = { page, ig, name, at: Date.now() }; await setJ('ids', o); return o;
+}
+export async function account() { try { const i = await ids(); let u = ''; if (i.ig) { try { u = (await graph(i.ig, { fields: 'username' })).username || ''; } catch (e) {} } return { page: i.name, ig: u, igOk: !!i.ig }; } catch (e) { return { error: e.message }; } }
 async function pageToken() {   // la page Facebook se publie avec sa propre clé, obtenue à partir de la clé principale
   const c = await getJ('pagetok'); if (c && c.exp > Date.now()) return c.t;
-  const j = await graph(process.env.META_PAGE_ID, { fields: 'access_token' }); if (!j.access_token) throw err(502, 'Meta : pas d’accès à la page Facebook');
+  const j = await graph((await ids()).page, { fields: 'access_token' }); if (!j.access_token) throw err(502, 'Meta : pas d’accès à la page Facebook');
   await setJ('pagetok', { t: j.access_token, exp: Date.now() + 6 * 3600000 }); return j.access_token;
 }
 export async function log(msg) { const l = await getJ('log', []); l.unshift({ t: Date.now(), msg: String(msg).slice(0, 300) }); await setJ('log', l.slice(0, 200)); }
@@ -118,13 +126,14 @@ export async function addPost(d) {
 /* ---- publication ---- */
 async function publishOne(p) {
   const res = {}, errs = [];
-  if (p.nets.ig && process.env.META_IG_ID) {
-    try { const c = await graph(process.env.META_IG_ID + '/media', { image_url: p.img, caption: p.caption }, 'POST');
+  const I = await ids();
+  if (p.nets.ig && I.ig) {
+    try { const c = await graph(I.ig + '/media', { image_url: p.img, caption: p.caption }, 'POST');
       for (let i = 0; i < 6; i++) { const s = await graph(c.id, { fields: 'status_code' }); if (s.status_code === 'FINISHED') break; if (s.status_code === 'ERROR') throw err(502, 'Meta : image refusée par Instagram (format ou taille)'); await new Promise(r => setTimeout(r, 2500)); }
-      const m = await graph(process.env.META_IG_ID + '/media_publish', { creation_id: c.id }, 'POST'); res.ig = m.id; } catch (e) { errs.push('Instagram : ' + e.message); }
+      const m = await graph(I.ig + '/media_publish', { creation_id: c.id }, 'POST'); res.ig = m.id; } catch (e) { errs.push('Instagram : ' + e.message); }
   }
-  if (p.nets.fb && process.env.META_PAGE_ID) {
-    try { const f = await graph(process.env.META_PAGE_ID + '/photos', { url: p.img, message: p.caption, published: true }, 'POST', await pageToken()); res.fb = f.post_id || f.id; } catch (e) { errs.push('Facebook : ' + e.message); }
+  if (p.nets.fb && I.page) {
+    try { const f = await graph(I.page + '/photos', { url: p.img, message: p.caption, published: true }, 'POST', await pageToken()); res.fb = f.post_id || f.id; } catch (e) { errs.push('Facebook : ' + e.message); }
   }
   return { res, errs };
 }
@@ -142,8 +151,8 @@ export async function publishDue(limit = 3) {
 
 /* ---- résultats : ce qui marche sur Instagram, et pourquoi ---- */
 export async function refreshStats() {
-  if (!process.env.META_IG_ID || !TOKEN()) return { skip: 1 };
-  const media = ((await graph(process.env.META_IG_ID + '/media', { fields: 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count', limit: 30 })).data || []);
+  if (!TOKEN()) return { skip: 1 }; const I = await ids(); if (!I.ig) return { skip: 1 };
+  const media = ((await graph(I.ig + '/media', { fields: 'id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count', limit: 30 })).data || []);
   const out = [];
   for (const m of media) {
     let ins = {}; try { for (const x of ((await graph(m.id + '/insights', { metric: 'reach,saved,shares,views' })).data || [])) ins[x.name] = +((x.values || [])[0] || {}).value || +x.total_value?.value || 0; } catch (e) {}

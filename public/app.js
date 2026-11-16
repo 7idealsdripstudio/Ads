@@ -23,8 +23,8 @@ function vLogin() {
 }
 const TABS = [['cal', 'Calendrier'], ['media', 'Médiathèque'], ['res', 'Résultats'], ['shop', 'Google Shopping'], ['pin', 'Pinterest'], ['set', 'Réglages']];
 function vSetup(r) {
-  return `<div class="card"><b>Connexion à Instagram et Facebook</b><p class="sm">Pour publier, ajoute dans Netlify (Project configuration → Environment variables) puis redéploie :</p>
-  <ul class="sm">${r.missing.map(k => `<li><code>${esc(k)}</code></li>`).join('')}</ul><p class="mut sm">En attendant, la médiathèque, le calendrier, Google Shopping et Pinterest fonctionnent déjà.</p></div>`;
+  return `<div class="card"><b>Connexion à Instagram et Facebook</b><p class="sm">Pour publier, ajoute la clé Meta <code>META_TOKEN</code> dans Netlify (Project configuration → Environment variables), puis redéploie. La page Facebook et le compte Instagram sont retrouvés automatiquement.</p>
+  <p class="mut sm">En attendant, la médiathèque, le calendrier, Google Shopping et Pinterest fonctionnent déjà.</p></div>`;
 }
 function vCal(r) {
   const up = r.posts.filter(p => p.status === 'planned').sort((a, b) => a.when - b.when), past = r.posts.filter(p => p.status !== 'planned').sort((a, b) => (b.at || b.when) - (a.at || a.when)).slice(0, 12);
@@ -87,7 +87,7 @@ function vApp() {
   const view = { cal: vCal, media: vMedia, res: vRes, shop: vShop, pin: vPin, set: vSet }[F.tab](r);
   const log = r.log.slice(0, 8).map(l => `<p class="mut sm" style="margin:4px 0 0">${esc(when(l.t))} — ${esc(l.msg)}</p>`).join('');
   return `<div><h2>Publicité gratuite · PELO et 7ideals</h2><p class="mut sm" style="margin:4px 0 0">Instagram, Facebook, Google Shopping et Pinterest, sans aucune pub payante.</p></div>
-    ${r.missing.length ? vSetup(r) : ''}<nav class="tabs">${TABS.map(([k, n]) => `<button class="tab${F.tab === k ? ' on' : ''}" data-a="tab" data-id="${k}">${n}</button>`).join('')}</nav>${view}
+    ${r.missing.length ? vSetup(r) : r.account ? (r.account.error ? `<div class="card"><b>Connexion Meta</b><p class="sm neg">${esc(r.account.error)}</p></div>` : `<p class="sm" style="margin-top:8px">Connecté : page Facebook <b>${esc(r.account.page || '')}</b>${r.account.ig ? ' · Instagram <b>@' + esc(r.account.ig) + '</b>' : ' · <span class="neg">aucun compte Instagram professionnel relié à cette page</span>'}</p>`) : ''}<nav class="tabs">${TABS.map(([k, n]) => `<button class="tab${F.tab === k ? ' on' : ''}" data-a="tab" data-id="${k}">${n}</button>`).join('')}</nav>${view}
     <div class="card"><b>Journal</b>${log || '<p class="mut sm">Rien pour l’instant.</p>'}</div>`;
 }
 function render() {

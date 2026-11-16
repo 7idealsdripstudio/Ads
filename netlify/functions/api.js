@@ -19,7 +19,7 @@ async function route(req) {
   const s = await session(req); if (!s) throw err(401, 'auth');
   if (m === 'GET' && p === '/api/state') {
     const st = await getJ('stats'), media = await getJ('media', []);
-    return J(200, { missing: O.missing(), groq: !!process.env.GROQ_API_KEY, cfg: await O.cfg(), posts: (await O.posts()).filter(x => x.status === 'planned' || Date.now() - (x.at || x.when) < 30 * 86400000).slice(-80),
+    return J(200, { missing: O.missing(), account: O.missing().length ? null : await O.account(), groq: !!process.env.GROQ_API_KEY, cfg: await O.cfg(), posts: (await O.posts()).filter(x => x.status === 'planned' || Date.now() - (x.at || x.when) < 30 * 86400000).slice(-80),
       media: media.map(x => ({ ...x, url: O.mediaUrl(x.id) })), stats: st ? st.media : [], statsAt: st ? st.at : 0, lessons: st ? O.lessons(st.media) : [], catalog: await O.catalog(), log: (await getJ('log', [])).slice(0, 25),
       feeds: { google: O.SITE() + '/feed/google.xml', pinterest: O.SITE() + '/feed/pinterest.xml' }, security: (await getJ('sec/log', [])).slice(0, 10) });
   }
