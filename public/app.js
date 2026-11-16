@@ -2,6 +2,7 @@
 'use strict';
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fr = n => (+n || 0).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
 const eur = n => (+n || 0).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
 const F = {}, S = { r: null, auth: null, busy: false };
 function toast(m) { const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 4000); }
@@ -41,11 +42,11 @@ function vApp() {
     <button class="btn s" style="margin-top:10px" data-a="cfg">Enregistrer</button></div>`;
   if (!r.connected) return head + `<div class="card"><b>Connexion à Meta</b><p class="sm">À ajouter dans Netlify (Project configuration → Environment variables), puis redéployer :</p><ul class="sm">${(r.missing || []).map(k => `<li><code>${esc(k)}</code></li>`).join('')}<li class="mut"><code>META_IG_ID</code>, <code>META_PIXEL_ID</code> : facultatifs</li></ul></div>` + cfg + method;
   const a = r.account || {}, w = r.week || {};
-  const tiles = [['Dépensé aujourd’hui', eur(r.todaySpend) + (c.capDay ? ' / ' + eur(c.capDay) : '')], ['Dépense 7 jours', eur(w.spend)], ['Clics', String(w.clicks || 0)], ['Taux de clic', (w.ctr || 0) + ' %'], ['Ventes', String(w.purchases || 0)], ['Rentabilité', String(w.roas || 0)]]
+  const tiles = [['Dépensé aujourd’hui', eur(r.todaySpend) + (c.capDay ? ' / ' + eur(c.capDay) : '')], ['Dépense 7 jours', eur(w.spend)], ['Clics', String(w.clicks || 0)], ['Taux de clic', fr(w.ctr) + ' %'], ['Ventes', String(w.purchases || 0)], ['Rentabilité', fr(w.roas)]]
     .map(([k, x]) => `<div class="card"><span class="mut sm">${esc(k)}</span><div class="big">${esc(x)}</div></div>`).join('');
   const camps = (r.campaigns || []).map(x => { const k = x.k || {}, on = x.eff === 'ACTIVE';
     return `<div class="card"><div class="row" style="flex-wrap:wrap"><span style="flex:1;min-width:220px"><b>${esc(x.name)}</b><span class="tag${on ? ' on' : ''}">${on ? 'active' : esc((x.eff || x.status || '').toLowerCase())}</span>
-      <div class="mut sm">${eur(x.daily)} / jour · dépensé ${eur(k.spend)} · ${k.clicks || 0} clics · ${k.ctr || 0} % · ${k.purchases || 0} vente(s)${k.roas ? ' · rentabilité ' + k.roas : ''}</div></span>
+      <div class="mut sm">${eur(x.daily)} / jour · dépensé ${eur(k.spend)} · ${k.clicks || 0} clics · ${fr(k.ctr)} % · ${k.purchases || 0} vente(s)${k.roas ? ' · rentabilité ' + fr(k.roas) : ''}</div></span>
       ${x.ours ? `<button class="btn${on ? '' : ' s'}" data-a="st" data-id="${esc(x.id)}" data-on="${on ? 0 : 1}">${on ? 'Mettre en pause' : 'Lancer'}</button>` : ''}</div>
       ${(x.why || []).length ? `<details style="margin-top:6px"><summary class="sm">Pourquoi ces résultats</summary><ul>${x.why.map(s => `<li class="sm">${esc(s)}</li>`).join('')}</ul></details>` : ''}</div>`; }).join('') || '<p class="mut sm">Aucune campagne pour l’instant.</p>';
   const brand = F.b || 'pelo', goal = F.g || 'trafic';
