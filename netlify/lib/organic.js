@@ -33,7 +33,7 @@ async function pageToken() {   // la page Facebook se publie avec sa propre clé
 export async function log(msg) { const l = await getJ('log', []); l.unshift({ t: Date.now(), msg: String(msg).slice(0, 300) }); await setJ('log', l.slice(0, 200)); }
 
 /* ---- réglages ---- */
-const DEF = { auto: 1, peloFeed: 0, perWeek: 3, nets: { ig: 1, fb: 1 }, brands: { pelo: 1, '7ideals': 1 }, urls: { pelo: 'https://boutique-pelo.netlify.app', '7ideals': '' } };
+const DEF = { auto: 1, peloFeed: 0, perWeek: 3, nets: { ig: 1, fb: 1 }, brands: { pelo: 0, '7ideals': 1 }, urls: { pelo: 'https://boutique-pelo.netlify.app', '7ideals': '' } };
 export async function cfg() { const c = await getJ('cfg2', {}); return { ...DEF, ...c, nets: { ...DEF.nets, ...(c.nets || {}) }, brands: { ...DEF.brands, ...(c.brands || {}) }, urls: { ...DEF.urls, ...(c.urls || {}) } }; }
 export async function setCfg(d) {
   const c = await cfg(), u = d.urls || {}, ok = s => /^https:\/\/[^\s]+$/.test(s || '');
