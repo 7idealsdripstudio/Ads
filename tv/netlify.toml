@@ -1,7 +1,7 @@
 # 7ideals TV — site public (projet Netlify séparé, dossier de base : tv)
 [build]
   # pas de mise en ligne quand le dossier tv ne change pas
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- ."
+  ignore = "[ \"$CACHED_COMMIT_REF\" != \"$COMMIT_REF\" ] && git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- ."
   publish = "public"
   functions = "netlify/functions"
 
