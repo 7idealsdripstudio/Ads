@@ -1,8 +1,6 @@
 [build]
   publish = "public"
   functions = "netlify/functions"
-  # pas de mise en ligne (ni de crédits) quand seul le site TV change
-  ignore = "[ \"$CACHED_COMMIT_REF\" != \"$COMMIT_REF\" ] && git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ':(exclude)tv'"
 
 [functions]
   node_bundler = "esbuild"
